@@ -57,6 +57,8 @@ for f in SKILL.md CHANGELOG.md VERSION; do
   [ -f "$TMP/$f" ] && mv "$TMP/$f" "$SKILL_DIR/$f.new" && mv "$SKILL_DIR/$f.new" "$SKILL_DIR/$f"
 done
 
+printf '%s %s -> %s\n' "$(date '+%Y-%m-%dT%H:%M:%S%z')" "$LOCAL" "$REMOTE" >> "$SKILL_DIR/update.log" 2>/dev/null || true
+
 CHG=$(head -n 15 "$SKILL_DIR/CHANGELOG.md" 2>/dev/null)
 printf '[loop-engineer updated] v%s -> v%s (backup: %s). Changelog:\n%s\nIf a loop-engineer loop is in progress, re-read %s/SKILL.md now (rules changed), apply them and continue; otherwise do nothing (the new text loads on the next /loop-engineer). Hook scripts are not auto-updated; re-run install.sh from the repo if the changelog says hooks changed.\n' \
   "$LOCAL" "$REMOTE" "$BAK" "$CHG" "$SKILL_DIR"

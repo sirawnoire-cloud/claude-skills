@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.2.2
+- HOOKS CHANGED — re-run `install.sh`: updates and loop recoveries now show a one-line user-visible `systemMessage`; each applied update is appended to `~/.claude/skills/loop-engineer/update.log`.
+
 ## 0.2.1
 - HOOKS CHANGED — re-run `install.sh` (hook scripts are never auto-updated): the UserPromptSubmit hook now also runs the self-update check (throttled to once per 6h), so long-lived sessions get updates without a restart.
 - Update stamp is touched before fetching, so an offline check cannot slow every prompt; update notice only asks for a SKILL.md re-read when a loop is in progress.

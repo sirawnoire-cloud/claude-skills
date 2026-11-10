@@ -13,6 +13,13 @@ OUT=""
 UPD=$("$HERE/loop-engineer-update.sh" 2>/dev/null || true)
 [ -n "$UPD" ] && OUT="$UPD"
 
+# user-visible one-liner (systemMessage) when an update was applied
+SYS=""
+case "$UPD" in
+  "[loop-engineer updated]"*)
+    SYS=$(printf '%s' "$UPD" | head -n1 | sed -E 's/^\[loop-engineer updated\] (v[0-9.]+ -> v[0-9.]+).*/loop-engineer updated: \1 (details: ~\/.claude\/skills\/loop-engineer\/CHANGELOG.md, log: update.log)/') ;;
+esac
+
 STATE="$CWD/.loop-engineer-state.json"
 MEM="$CWD/.loop-engineer-memory.md"
 if [ -f "$STATE" ] && jq -e . "$STATE" >/dev/null 2>&1; then
@@ -35,7 +42,9 @@ ${M:-(missing — rebuild it from the state file and the repo, then continue)}"
   OUT="${OUT:+$OUT
 
 }$BLOCK"
+  TK=$(jq -r '.task // ""' "$STATE" | head -c 60); IT=$(jq -r '.iteration // "?"' "$STATE"); PH=$(jq -r '.phase // "?"' "$STATE")
+  SYS="${SYS:+$SYS | }loop-engineer: loop resumed from disk (\"$TK\", iteration $IT, phase $PH)"
 fi
 
 [ -z "$OUT" ] && exit 0
-jq -n --arg c "$OUT" '{hookSpecificOutput:{hookEventName:"SessionStart",additionalContext:$c}}'
+jq -n --arg c "$OUT" --arg s "$SYS" '{hookSpecificOutput:{hookEventName:"SessionStart",additionalContext:$c}} + (if $s != "" then {systemMessage:$s} else {} end)'

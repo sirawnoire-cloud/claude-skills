@@ -9,7 +9,15 @@ CWD=$(printf '%s' "$INPUT" | jq -r '.cwd // empty' 2>/dev/null)
 CWD=${CWD:-${CLAUDE_PROJECT_DIR:-$PWD}}
 HERE=$(cd "$(dirname "$0")" && pwd)
 
-OUT=$("$HERE/loop-engineer-update.sh" 2>/dev/null || true)
+UPD=$("$HERE/loop-engineer-update.sh" 2>/dev/null || true)
+OUT="$UPD"
+
+# user-visible one-liner (systemMessage) when an update was applied
+SYS=""
+case "$UPD" in
+  "[loop-engineer updated]"*)
+    SYS=$(printf '%s' "$UPD" | head -n1 | sed -E 's/^\[loop-engineer updated\] (v[0-9.]+ -> v[0-9.]+).*/loop-engineer updated: \1 (details: ~\/.claude\/skills\/loop-engineer\/CHANGELOG.md, log: update.log)/') ;;
+esac
 
 STATE="$CWD/.loop-engineer-state.json"
 if [ -f "$STATE" ]; then
@@ -28,4 +36,4 @@ if [ -f "$STATE" ]; then
 fi
 
 [ -z "$OUT" ] && exit 0
-jq -n --arg c "$OUT" '{hookSpecificOutput:{hookEventName:"UserPromptSubmit",additionalContext:$c}}'
+jq -n --arg c "$OUT" --arg s "$SYS" '{hookSpecificOutput:{hookEventName:"UserPromptSubmit",additionalContext:$c}} + (if $s != "" then {systemMessage:$s} else {} end)'

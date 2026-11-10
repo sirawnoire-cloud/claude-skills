@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.4.0
+- HOOKS CHANGED — re-run the repo's `install.sh`: skill self-update moved out of the loop-engineer hooks into a generic, separate `claude-skills-sync` hook (updates every skill installed from this repo, not just loop-engineer). `loop-engineer-update.sh` is removed; the recover/nudge hooks now only handle loop recovery and stale-rules detection (via `skill_version`).
+
 ## 0.3.0
 - HOOKS CHANGED — re-run `install.sh` (adds 4 hooks: PreToolUse/PostToolUse on `Agent`, `SubagentStop`, `Stop`): Delegation rules are now enforced mechanically while a loop is active. Spawns are denied unless the prompt has the LOOP-ROLE/ALLOWED-FILES/GUARDRAILS (executor) or CRITERIA/ARTIFACTS (judge) headers; judge/research must use a read-only agent type; no nested agents; cap 5 per iteration; executor needs a snapshot.
 - After an executor agent returns, the hook runs `verify-diff.sh check` itself and reports; every spawn/result is logged to `.loop-engineer-agents.jsonl` (shown after recovery); the Stop hook blocks finishing while a VIOLATION marker exists (guarded by `stop_hook_active`).

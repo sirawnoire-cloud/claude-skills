@@ -5,3 +5,6 @@
 .loop-engineer-snapshot.tsv
 .loop-engineer-violation
 .DS_Store
+__pycache__/
+*.pyc
+node_modules/

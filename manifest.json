@@ -1,0 +1,311 @@
+{
+  "schema": 1,
+  "skills": {
+    "claude-handoff": {
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "CHANGELOG.md",
+          "sha256": "a68441278d37773f825fdf570b13f46ed6e2ff6f9c8084c90be70c0c7b453d8b",
+          "auto": true,
+          "size": 44
+        },
+        {
+          "path": "SKILL.md",
+          "sha256": "bbb25773158d78f610461e4041ffb56fe871cb297626e1f52b0535a9083b7996",
+          "auto": true,
+          "size": 1285
+        },
+        {
+          "path": "VERSION",
+          "sha256": "59854984853104df5c353e2f681a15fc7924742f9a2e468c29af248dce45ce03",
+          "auto": true,
+          "size": 6
+        }
+      ]
+    },
+    "ea-builder": {
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "CHANGELOG.md",
+          "sha256": "a68441278d37773f825fdf570b13f46ed6e2ff6f9c8084c90be70c0c7b453d8b",
+          "auto": true,
+          "size": 44
+        },
+        {
+          "path": "SKILL.md",
+          "sha256": "d881953c608c43d4903627fdc034752025ec21a99e5ad48bd81e081e53662698",
+          "auto": true,
+          "size": 18206
+        },
+        {
+          "path": "VERSION",
+          "sha256": "59854984853104df5c353e2f681a15fc7924742f9a2e468c29af248dce45ce03",
+          "auto": true,
+          "size": 6
+        },
+        {
+          "path": "references/concepts.md",
+          "sha256": "85736317071843f7ba8fd8ded7f543bd321d36e144efa98eb570a2558b9bb32b",
+          "auto": true,
+          "size": 11759
+        },
+        {
+          "path": "references/mechanics.md",
+          "sha256": "5c62fa2e4349e02a3ecdde012b593461ce0f5bcba484747f47ce1883f7512bd2",
+          "auto": true,
+          "size": 9433
+        },
+        {
+          "path": "references/robustness.md",
+          "sha256": "b1ef2d647cc6728b8150b0337408051bc0f9cfd01531a539c16e4aa4f5c4e5f1",
+          "auto": true,
+          "size": 7421
+        }
+      ]
+    },
+    "loop-engineer": {
+      "version": "0.4.0",
+      "files": [
+        {
+          "path": "CHANGELOG.md",
+          "sha256": "82c1ccf646c299137d465730582fba1f4370e5caa15cca85ed7b0cc5a6d5f860",
+          "auto": true,
+          "size": 4426
+        },
+        {
+          "path": "SKILL.md",
+          "sha256": "50621c426b7bc19d321e8927bd79c3dee13c8c3b3041a1881398ca7810e8de47",
+          "auto": true,
+          "size": 19172
+        },
+        {
+          "path": "VERSION",
+          "sha256": "40b8eb4000a913a7791090535f291d3d369874162a89ef3c9e3d4e887a1b9e79",
+          "auto": true,
+          "size": 6
+        },
+        {
+          "path": "hooks/loop-engineer-agent-post.sh",
+          "sha256": "c9d855c5b198820329f6d42691140399b0f08c4c599bfea5cff62e41495269a0",
+          "auto": false,
+          "size": 3546
+        },
+        {
+          "path": "hooks/loop-engineer-agent-pre.sh",
+          "sha256": "01c8651bde72e49f2e23000d9baaf78752325172f80e288049033434e67ba8dd",
+          "auto": false,
+          "size": 4212
+        },
+        {
+          "path": "hooks/loop-engineer-agent-stop.sh",
+          "sha256": "bc5b01b7569a3fc0f66143ea344d2c016f46b3b5dd39bc69926410e4ea32199f",
+          "auto": false,
+          "size": 909
+        },
+        {
+          "path": "hooks/loop-engineer-nudge.sh",
+          "sha256": "5da3cfefa864fae20a1be0cb21ad53eab0edbfec25a06f087aa15653af31c1be",
+          "auto": false,
+          "size": 2807
+        },
+        {
+          "path": "hooks/loop-engineer-precompact.sh",
+          "sha256": "9ba092643203b5cfadac346d550da4d4f849d022577488d4f543e8efd3209725",
+          "auto": false,
+          "size": 1017
+        },
+        {
+          "path": "hooks/loop-engineer-recover.sh",
+          "sha256": "cc9f91272ddb6bcab733143dd05a401e9e2ea5f90faebb3464a446512dc18d07",
+          "auto": false,
+          "size": 4081
+        },
+        {
+          "path": "hooks/loop-engineer-stop.sh",
+          "sha256": "fa4731ff6f8618b3d9860fdcd117f83b207f03bd4999b64306b6ed836ea9f7ce",
+          "auto": false,
+          "size": 2896
+        },
+        {
+          "path": "install.sh",
+          "sha256": "1755797badedae4f5b66ead8a8337d9284582e68bcb5416f8706fc00792ee231",
+          "auto": false,
+          "size": 2346
+        },
+        {
+          "path": "verify-diff.sh",
+          "sha256": "0193f870360ff7adcff8c75e55374bd0d4b3e2f204bcbe90e6640ac5add2f1d8",
+          "auto": false,
+          "size": 3990
+        }
+      ]
+    },
+    "skill-smith": {
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "CHANGELOG.md",
+          "sha256": "a68441278d37773f825fdf570b13f46ed6e2ff6f9c8084c90be70c0c7b453d8b",
+          "auto": true,
+          "size": 44
+        },
+        {
+          "path": "SKILL.md",
+          "sha256": "5609ad157ca3eece8b2ca10b9ee1bd45af714eceaf3ea88370a13203c03f7ba1",
+          "auto": true,
+          "size": 14936
+        },
+        {
+          "path": "VERSION",
+          "sha256": "59854984853104df5c353e2f681a15fc7924742f9a2e468c29af248dce45ce03",
+          "auto": true,
+          "size": 6
+        },
+        {
+          "path": "references/anatomy.md",
+          "sha256": "2c3d7e0e2c42c8f4ff43c3da8b21c19a6155448bde1a55ebf4362341968ea7a3",
+          "auto": true,
+          "size": 4645
+        },
+        {
+          "path": "references/smells.md",
+          "sha256": "2c5e0e831d68675bf05d2564894069b4ea2dadfd5defe2ff5ff6013d509892ad",
+          "auto": true,
+          "size": 4121
+        },
+        {
+          "path": "references/triage.md",
+          "sha256": "7f3db2edc6b7afe8df1553139ca8a03a98bd2363e47ea9d64e7e2d319a44095a",
+          "auto": true,
+          "size": 3962
+        },
+        {
+          "path": "scripts/hook-validate.sh",
+          "sha256": "42975b8cf3b7c09f783013bedee1b321d766180eeaca30c56e9616ea58135bbe",
+          "auto": false,
+          "size": 664
+        },
+        {
+          "path": "scripts/hook_validate.py",
+          "sha256": "71101c6ce9b156e91e19248ae1e61a52a4d5013dba80f8892e8d0c2235b67798",
+          "auto": false,
+          "size": 5473
+        },
+        {
+          "path": "scripts/validate.sh",
+          "sha256": "85e3db3f92a8e301afcde84f080db67fa4e96241550b6e385e3f0b0da3e67aca",
+          "auto": false,
+          "size": 5071
+        },
+        {
+          "path": "templates/SKILL.template.md",
+          "sha256": "11543187913f90b74e757a1020ce704d8541fb8ee3472c01b9c85ac28b282c16",
+          "auto": true,
+          "size": 2037
+        }
+      ]
+    },
+    "ui-craft": {
+      "version": "2.0.0",
+      "files": [
+        {
+          "path": "CHANGELOG.md",
+          "sha256": "24905e5133e2df21f16974cbec1839014854a4e3bd7b8ebd41ca13bd374fe5e8",
+          "auto": true,
+          "size": 193
+        },
+        {
+          "path": "SKILL.md",
+          "sha256": "7d3d4a01e7af9888fe28e6e75068608cd136766e55f91e0b19dacc68913d1ff5",
+          "auto": true,
+          "size": 12026
+        },
+        {
+          "path": "VERSION",
+          "sha256": "c28fcca53637bc88e124af1725df13cb98c69dedefd62fb3cdbe1cdb6b760624",
+          "auto": true,
+          "size": 6
+        },
+        {
+          "path": "references/directions.md",
+          "sha256": "8241215ed509cfd5cda1700941630b9c1eaac215cece07744078d09deaebf226",
+          "auto": true,
+          "size": 10136
+        },
+        {
+          "path": "references/interaction.md",
+          "sha256": "9b2b9674287735ae217b764329ed47dba0b9875ce6be7dc19a206c82a378e2b1",
+          "auto": true,
+          "size": 6122
+        },
+        {
+          "path": "references/motion.md",
+          "sha256": "4138511f6b23c51ebc8e768e41be81250137646d0a1a8b3ab5efaaa7a314bc8b",
+          "auto": true,
+          "size": 10157
+        },
+        {
+          "path": "references/responsive.md",
+          "sha256": "d61ab9f5ba42248da8bfc2c80011198dddb168757a8bda4804e611f150950041",
+          "auto": true,
+          "size": 6876
+        },
+        {
+          "path": "references/rubric.md",
+          "sha256": "0114200985677374f44f903acd3e397545d55e3e1fb8a3e5f19000ef9df1ef74",
+          "auto": true,
+          "size": 8475
+        },
+        {
+          "path": "references/theme.md",
+          "sha256": "4d632be88dd39bb3e4c9bac1fcdeb841bcbef474f17a8a9db42d7ded8e9bc566",
+          "auto": true,
+          "size": 7432
+        },
+        {
+          "path": "scripts/preflight.mjs",
+          "sha256": "285fdeafa02f07482797b98596f266e435d586c3687adac0b3db8f8a175d56a7",
+          "auto": false,
+          "size": 10850
+        },
+        {
+          "path": "scripts/preflight.sh",
+          "sha256": "05d8fe45eaa760608a188d9c23a9eefbb7e6982adf9a3d5d74b45a19abe59cc6",
+          "auto": false,
+          "size": 937
+        },
+        {
+          "path": "templates/ui-spec.template.md",
+          "sha256": "1e5a2b0058f114be3b1bb9ca213bbb7aa0ddef910a109ba3d88076b42098d6f7",
+          "auto": true,
+          "size": 4437
+        }
+      ]
+    },
+    "wayfinder": {
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "CHANGELOG.md",
+          "sha256": "a68441278d37773f825fdf570b13f46ed6e2ff6f9c8084c90be70c0c7b453d8b",
+          "auto": true,
+          "size": 44
+        },
+        {
+          "path": "SKILL.md",
+          "sha256": "bef437de697fb6984a8a90b7fd82f128609148d6e02f635ce419d03555b351e1",
+          "auto": true,
+          "size": 11503
+        },
+        {
+          "path": "VERSION",
+          "sha256": "59854984853104df5c353e2f681a15fc7924742f9a2e468c29af248dce45ce03",
+          "auto": true,
+          "size": 6
+        }
+      ]
+    }
+  }
+}

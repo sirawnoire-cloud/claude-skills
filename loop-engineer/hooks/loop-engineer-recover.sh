@@ -1,29 +1,20 @@
 #!/usr/bin/env bash
 # loop-engineer SessionStart hook (startup|resume|clear|compact|fork).
-# 1) best-effort self-update  2) if a loop is in progress, re-inject state + memory
-#    (+ the full current rules text when the skill was updated / the loop's skill_version is stale).
+# If a loop is in progress, re-inject state + memory (+ the full current rules text when the loop's
+# skill_version is stale). Skill self-update is done by the separate claude-skills-sync hook.
 set -u
 command -v jq >/dev/null 2>&1 || exit 0
 INPUT=$(cat 2>/dev/null || true)
 CWD=$(printf '%s' "$INPUT" | jq -r '.cwd // empty' 2>/dev/null)
 CWD=${CWD:-${CLAUDE_PROJECT_DIR:-$PWD}}
 SRC=$(printf '%s' "$INPUT" | jq -r '.source // "unknown"' 2>/dev/null)
-HERE=$(cd "$(dirname "$0")" && pwd)
 SK="${LOOP_ENGINEER_SKILL_DIR:-$HOME/.claude/skills/loop-engineer}"
 
 # current skill text without frontmatter, capped
 rules_body() { awk '/^---$/{c++; next} c>=2' "$SK/SKILL.md" 2>/dev/null | head -c 24000; }
 
 OUT=""
-UPD=$("$HERE/loop-engineer-update.sh" 2>/dev/null || true)
-[ -n "$UPD" ] && OUT="$UPD"
-
-# user-visible one-liner (systemMessage) when an update was applied
 SYS=""
-case "$UPD" in
-  "[loop-engineer updated]"*)
-    SYS=$(printf '%s' "$UPD" | head -n1 | sed -E 's/^\[loop-engineer updated\] (v[0-9.]+ -> v[0-9.]+).*/loop-engineer updated: \1 (details: ~\/.claude\/skills\/loop-engineer\/CHANGELOG.md, log: update.log)/') ;;
-esac
 
 STATE="$CWD/.loop-engineer-state.json"
 MEM="$CWD/.loop-engineer-memory.md"
@@ -69,8 +60,8 @@ $VIOL"
   [ -n "$VERMSG" ] && BLOCK="$BLOCK
 
 $VERMSG"
-  # ship the full current rules when they changed (stale loop) or were just updated
-  if [ -n "$VERMSG" ] || [ -n "$UPD" ]; then
+  # ship the full current rules when they changed (stale loop)
+  if [ -n "$VERMSG" ]; then
     RB=$(rules_body)
     [ -n "$RB" ] && BLOCK="$BLOCK
 

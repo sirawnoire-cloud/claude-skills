@@ -1,27 +1,19 @@
 #!/usr/bin/env bash
 # loop-engineer UserPromptSubmit hook.
-#  1) best-effort self-update check (throttled inside loop-engineer-update.sh, default 6h)
-#  2) while a loop is active: a cheap re-anchor reminder (throttled 10 min), and — once per installed
-#     version per project — the full current rules text if the skill was updated / the loop's skill_version is stale.
+# While a loop is active: a cheap re-anchor reminder (throttled 10 min), and — once per installed version
+# per project — the full current rules text if the loop's skill_version is stale.
+# (Skill self-update is done by the separate claude-skills-sync hook.)
 set -u
 command -v jq >/dev/null 2>&1 || exit 0
 INPUT=$(cat 2>/dev/null || true)
 CWD=$(printf '%s' "$INPUT" | jq -r '.cwd // empty' 2>/dev/null)
 CWD=${CWD:-${CLAUDE_PROJECT_DIR:-$PWD}}
-HERE=$(cd "$(dirname "$0")" && pwd)
 SK="${LOOP_ENGINEER_SKILL_DIR:-$HOME/.claude/skills/loop-engineer}"
 
 rules_body() { awk '/^---$/{c++; next} c>=2' "$SK/SKILL.md" 2>/dev/null | head -c 24000; }
 
-UPD=$("$HERE/loop-engineer-update.sh" 2>/dev/null || true)
-OUT="$UPD"
-
-# user-visible one-liner (systemMessage) when an update was applied
+OUT=""
 SYS=""
-case "$UPD" in
-  "[loop-engineer updated]"*)
-    SYS=$(printf '%s' "$UPD" | head -n1 | sed -E 's/^\[loop-engineer updated\] (v[0-9.]+ -> v[0-9.]+).*/loop-engineer updated: \1 (details: ~\/.claude\/skills\/loop-engineer\/CHANGELOG.md, log: update.log)/') ;;
-esac
 
 STATE="$CWD/.loop-engineer-state.json"
 if [ -f "$STATE" ]; then
@@ -33,7 +25,7 @@ if [ -f "$STATE" ]; then
 
   # full rules: only when changed/updated, and only once per installed version per project
   RSTAMP="$TMP/loop-engineer-rules-$KEY-${CUR:-x}"
-  if { [ "$STALE" = 1 ] || [ -n "$UPD" ]; } && [ ! -f "$RSTAMP" ]; then
+  if [ "$STALE" = 1 ] && [ ! -f "$RSTAMP" ]; then
     RB=$(rules_body)
     if [ -n "$RB" ]; then
       touch "$RSTAMP" 2>/dev/null || true

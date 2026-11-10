@@ -9,6 +9,7 @@ SK="$CLAUDE/skills/loop-engineer"; HK="$CLAUDE/hooks"; SET="$CLAUDE/settings.jso
 mkdir -p "$SK" "$HK"
 
 for f in SKILL.md VERSION CHANGELOG.md; do cp "$SRC/$f" "$SK/$f"; done
+cp "$SRC/verify-diff.sh" "$SK/verify-diff.sh"; chmod +x "$SK/verify-diff.sh"
 for f in recover precompact nudge update; do
   cp "$SRC/hooks/loop-engineer-$f.sh" "$HK/loop-engineer-$f.sh"; chmod +x "$HK/loop-engineer-$f.sh"
 done

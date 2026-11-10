@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.5
+- SKILL.md: new "Delegation (subagents)" section — default is no subagents; when worth it, executor-side and judge-side rules, never trust agent reports, record pending/returned agents in state/memory so compaction cannot lose them. Rules digest gets a matching line.
+- New `verify-diff.sh` (snapshot / check / clean): deterministic diff vs a snapshot, flags out-of-scope changes and deleted/modified tests. Works in git and non-git dirs. NOT auto-updated and not a hook change — re-run `install.sh` to get it; SKILL.md falls back to `git diff --stat` if it is missing.
+
 ## 0.2.4
 - HOOKS CHANGED — re-run `install.sh`: when the skill was updated or a loop's `skill_version` is stale, hooks inject the full current rules text (SKILL.md minus frontmatter, ~14 KB) with a "replaces any earlier copy" header, instead of only asking the model to re-read the file. SessionStart does it every time it fires; the prompt hook does it once per installed version per project. Only while a loop is in progress (no loop = no extra tokens).
 

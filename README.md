@@ -11,6 +11,12 @@ Personal Claude Code skills, versioned here and kept up to date on every machine
 | [claude-handoff](claude-handoff/) | Hand the current conversation off to a fresh background agent. |
 | [wayfinder](wayfinder/) | Plan a huge chunk of work as a shared map of investigation tickets. |
 
+## Extras (not skills, not auto-updated)
+
+| Extra | What it is |
+| --- | --- |
+| [plan-thai-gate](extras/plan-thai-gate/) | `ExitPlanMode` hook for the pordee plugin: blocks plans that aren't terse Thai. Executable code, so it is installed manually and never touched by the sync hook. |
+
 ## Install
 
 ```

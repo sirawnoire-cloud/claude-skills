@@ -13,6 +13,7 @@
 # Exit: 0 no violations, 1 violations found, 2 usage/error. Works in git and non-git directories.
 set -u
 SNAP=".loop-engineer-snapshot.tsv"
+MARK=".loop-engineer-violation"   # read by the Stop hook: exists while the last check had VIOLATIONs
 CAP=20000; BIG=5242880
 cmd="${1:-}"; shift || true
 
@@ -48,7 +49,7 @@ case "$cmd" in
     echo "snapshot: $n files recorded in $SNAP"
     [ "$n" -ge "$CAP" ] && echo "WARN: file cap ($CAP) reached; later files are not tracked"
     exit 0 ;;
-  clean) rm -f "$SNAP"; echo "snapshot removed"; exit 0 ;;
+  clean) rm -f "$SNAP" "$MARK" ".loop-engineer-stopblocks"; echo "snapshot removed"; exit 0 ;;
   check)
     [ -f "$SNAP" ] || { echo "no snapshot ($SNAP); run: verify-diff.sh snapshot" >&2; exit 2; }
     allow=()
@@ -58,23 +59,24 @@ case "$cmd" in
     cur=$(mktemp); trap 'rm -f "$cur"' EXIT
     hash_all > "$cur"
     changes=$(awk -F'\t' 'NR==FNR{a[$1]=$2; next} {b[$1]=$2} END{for(k in b){if(!(k in a)) print "A\t" k; else if(a[k]!=b[k]) print "M\t" k} for(k in a) if(!(k in b)) print "D\t" k}' "$SNAP" "$cur" | sort -t$'\t' -k2)
-    if [ -z "$changes" ]; then echo "no changes since snapshot"; exit 0; fi
-    viol=0
+    if [ -z "$changes" ]; then rm -f "$MARK"; echo "no changes since snapshot"; exit 0; fi
+    viol=0; REP=""
+    say() { echo "$1"; REP="$REP$1"$'\n'; }
     while IFS=$'\t' read -r st f; do
-      echo "$st $f"
+      say "$st $f"
       if [ ${#allow[@]} -gt 0 ]; then
         ok=0; for g in "${allow[@]}"; do case "$f" in $g) ok=1; break ;; esac; done
-        [ "$ok" = 0 ] && { echo "  VIOLATION: outside allowed scope"; viol=1; }
+        [ "$ok" = 0 ] && { say "  VIOLATION: outside allowed scope"; viol=1; }
       fi
       if is_test "$f"; then
-        [ "$st" = D ] && { echo "  VIOLATION: test file deleted"; viol=1; }
+        [ "$st" = D ] && { say "  VIOLATION: test file deleted"; viol=1; }
         [ "$st" = M ] && echo "  WARN: test file modified — review the diff for weakened/skipped assertions"
       elif [ "$st" = D ]; then
         echo "  WARN: file deleted"
       fi
     done <<< "$changes"
     [ ${#allow[@]} -eq 0 ] && echo "note: no --allow given, scope not checked"
-    [ "$viol" = 1 ] && { echo "RESULT: violations found"; exit 1; }
-    echo "RESULT: no violations"; exit 0 ;;
+    [ "$viol" = 1 ] && { printf '%s' "$REP" > "$MARK"; echo "RESULT: violations found"; exit 1; }
+    rm -f "$MARK"; echo "RESULT: no violations"; exit 0 ;;
   *) echo "usage: verify-diff.sh snapshot | check [--allow GLOB]... | clean" >&2; exit 2 ;;
 esac

@@ -120,7 +120,7 @@ Human-readable, short (aim under ~150 lines — it gets re-injected into context
 
 ### Finish
 
-Delete both files (and `.loop-engineer-snapshot.tsv` if you made one: `verify-diff.sh clean`) the instant the loop ends — pass, or the final report at max_iterations. A leftover file must never leak into a later, unrelated task.
+Delete both files (and, if they exist, `.loop-engineer-agents.jsonl`, and the snapshot + violation marker via `verify-diff.sh clean`) the instant the loop ends — pass, or the final report at max_iterations. A leftover file must never leak into a later, unrelated task.
 
 ## Delegation (subagents) — default is do it yourself
 
@@ -129,6 +129,19 @@ Work inline unless one of the cases below applies. A subagent starts with an emp
 **When it is worth it**
 - *Executor:* independent subtasks (same change across many files, separate modules that don't call each other), read-only exploration or reading large data where only a summary should come back, or competing attempts that must be isolated (separate worktree/directory).
 - *Evaluator:* only for qualitative criteria (LLM-judge), because the executor judging its own work is biased. Rule-based checks (tests, lint, build) always run in the main session.
+
+**Enforced by hooks (when installed) — not optional**
+While a loop is active, a PreToolUse hook on the `Agent` tool *denies* a spawn unless the prompt starts with these header lines (the denial message tells you what is missing; fix the prompt and retry):
+
+```
+LOOP-ROLE: executor | judge | research
+ALLOWED-FILES: src/*.py, src/util/*          (executor only; comma-separated globs, `*` matches `/`)
+GUARDRAILS: no-delete-tests, no-hardcode, no-mock-target, no-narrow-criteria   (executor only, all four)
+CRITERIA: <criteria text>                    (judge only)
+ARTIFACTS: <paths of the work to judge>      (judge only)
+```
+
+Also enforced: judge/research agents must be a read-only `subagent_type` (default Explore, Plan, claude-code-guide); executor agents need a `verify-diff.sh snapshot` first; no nested agents; max 5 agents per iteration. After an executor agent returns, a PostToolUse hook runs `verify-diff.sh check` itself with the union of that iteration's ALLOWED-FILES and shows you the result, logs the agent's result to `.loop-engineer-agents.jsonl` (the ledger — a record that survives compaction), and a Stop hook refuses to let the turn end while a `VIOLATION` is unresolved: it re-runs the check live, blocks up to 3 times, then lets the turn end with a warning shown to the user. Set `LOOP_ENGINEER_DEBUG_LOG=<file>` to make every hook log its decisions there. Hooks cannot check that you actually ran the full test suite or judged honestly — that part is still on you.
 
 **Executor-side rules**
 - Give each agent an explicit list of files it may change; lists must not overlap. If attempts overlap, isolate them in separate worktrees.

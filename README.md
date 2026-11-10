@@ -12,7 +12,7 @@ Personal Claude Code skills. Each skill lives in its own directory.
 git clone https://github.com/sirawnoire-cloud/claude-skills && ./claude-skills/loop-engineer/install.sh
 ```
 
-`install.sh` copies the skill to `~/.claude/skills/loop-engineer/`, the hooks to `~/.claude/hooks/`, and merges three hook entries (SessionStart, PreCompact, UserPromptSubmit) into `~/.claude/settings.json` (backup: `settings.json.bak-loop-engineer`; other hooks untouched; idempotent).
+`install.sh` copies the skill to `~/.claude/skills/loop-engineer/`, the hooks to `~/.claude/hooks/`, and merges hook entries (SessionStart, PreCompact, UserPromptSubmit, PreToolUse+PostToolUse on `Agent`, SubagentStop, Stop) into `~/.claude/settings.json` (backup: `settings.json.bak-loop-engineer`; other hooks untouched; idempotent).
 
 - Self-update: at SessionStart the skill text (SKILL.md/VERSION/CHANGELOG.md) is refreshed from this repo if `VERSION` is newer (sha256-checked against `manifest.txt`, at most every 6h). Disable with `LOOP_ENGINEER_NO_UPDATE=1`. Hook scripts are never auto-updated; re-run `install.sh` for those.
 - `verify-diff.sh` (installed next to the skill): `snapshot` / `check --allow GLOB` / `clean` — deterministic check of what changed on disk, used when delegating to subagents.

@@ -10,7 +10,7 @@ mkdir -p "$SK" "$HK"
 
 for f in SKILL.md VERSION CHANGELOG.md; do cp "$SRC/$f" "$SK/$f"; done
 cp "$SRC/verify-diff.sh" "$SK/verify-diff.sh"; chmod +x "$SK/verify-diff.sh"
-for f in recover precompact nudge update; do
+for f in recover precompact nudge update agent-pre agent-post agent-stop stop; do
   cp "$SRC/hooks/loop-engineer-$f.sh" "$HK/loop-engineer-$f.sh"; chmod +x "$HK/loop-engineer-$f.sh"
 done
 
@@ -25,6 +25,10 @@ jq --arg h "$HK" '
   .hooks //= {}
   | .hooks.SessionStart     = (drop("SessionStart")     + [entry("startup|resume|clear|compact|fork"; "\"\($h)/loop-engineer-recover.sh\""; 20)])
   | .hooks.PreCompact       = (drop("PreCompact")       + [entry(null; "\"\($h)/loop-engineer-precompact.sh\""; 10)])
+  | .hooks.PreToolUse       = (drop("PreToolUse")       + [entry("Agent"; "\"\($h)/loop-engineer-agent-pre.sh\""; 10)])
+  | .hooks.PostToolUse      = (drop("PostToolUse")      + [entry("Agent"; "\"\($h)/loop-engineer-agent-post.sh\""; 60)])
+  | .hooks.SubagentStop     = (drop("SubagentStop")     + [entry(null; "\"\($h)/loop-engineer-agent-stop.sh\""; 10)])
+  | .hooks.Stop             = (drop("Stop")             + [entry(null; "\"\($h)/loop-engineer-stop.sh\""; 30)])
   | .hooks.UserPromptSubmit = (drop("UserPromptSubmit") + [entry(null; "\"\($h)/loop-engineer-nudge.sh\""; 25)])
 ' "$SET" > "$tmp"
 jq -e . "$tmp" >/dev/null && mv "$tmp" "$SET"

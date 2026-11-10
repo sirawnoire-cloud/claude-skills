@@ -46,6 +46,11 @@ if [ -f "$STATE" ] && jq -e . "$STATE" >/dev/null 2>&1; then
 ...(middle truncated — $N lines total; read $MEM for the rest)...
 $(tail -n 120 "$MEM")"; fi
   fi
+  AG=""
+  if [ -f "$CWD/.loop-engineer-agents.jsonl" ]; then
+    AG=$(tail -n 8 "$CWD/.loop-engineer-agents.jsonl" | jq -r '"- [\(.event)] \(.role // .agent_type // "") \(.description // .agent_id // "") \((.result_head // .allowed // "") | .[0:160] | gsub("\n";" "))"' 2>/dev/null)
+  fi
+  VIOL=""; [ -f "$CWD/.loop-engineer-violation" ] && VIOL=$(head -c 800 "$CWD/.loop-engineer-violation")
   BLOCK="[loop-engineer recovered] session source: $SRC. A loop-engineer loop is IN PROGRESS in $CWD. Context may have been compacted/cleared, so the files below are the source of truth. Do NOT restart and do NOT ask the user to re-invoke /loop-engineer: say in one line what is continuing (task, iteration, phase), then continue from phase/step/Next. Do not repeat anything under Done or Failed attempts. If phase is executor/between or you are unsure, re-run the evaluator first. Re-read ~/.claude/skills/loop-engineer/SKILL.md if you need the full rules.
 
 --- .loop-engineer-state.json ---
@@ -53,6 +58,14 @@ $S
 
 --- .loop-engineer-memory.md ---
 ${M:-(missing — rebuild it from the state file and the repo, then continue)}"
+  [ -n "$AG" ] && BLOCK="$BLOCK
+
+--- subagent ledger (last 8; logged by hooks, a result that is missing from memory must be re-checked on disk) ---
+$AG"
+  [ -n "$VIOL" ] && BLOCK="$BLOCK
+
+--- UNRESOLVED verify-diff VIOLATION (the Stop hook blocks finishing until verify-diff.sh check passes) ---
+$VIOL"
   [ -n "$VERMSG" ] && BLOCK="$BLOCK
 
 $VERMSG"

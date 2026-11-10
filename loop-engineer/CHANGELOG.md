@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.0
+- HOOKS CHANGED — re-run `install.sh` (adds 4 hooks: PreToolUse/PostToolUse on `Agent`, `SubagentStop`, `Stop`): Delegation rules are now enforced mechanically while a loop is active. Spawns are denied unless the prompt has the LOOP-ROLE/ALLOWED-FILES/GUARDRAILS (executor) or CRITERIA/ARTIFACTS (judge) headers; judge/research must use a read-only agent type; no nested agents; cap 5 per iteration; executor needs a snapshot.
+- After an executor agent returns, the hook runs `verify-diff.sh check` itself and reports; every spawn/result is logged to `.loop-engineer-agents.jsonl` (shown after recovery); the Stop hook blocks finishing while a VIOLATION marker exists (guarded by `stop_hook_active`).
+- Stop hook re-runs the check live (a stale marker never blocks), blocks at most `LOOP_ENGINEER_MAX_STOP_BLOCKS` (default 3) times, then lets the turn end with a user-visible warning. `LOOP_ENGINEER_DEBUG_LOG=<file>` makes the Pre/Post/Stop hooks log their decisions.
+- Kill switch: `LOOP_ENGINEER_ENFORCE=0`. Tunables: `LOOP_ENGINEER_MAX_AGENTS`, `LOOP_ENGINEER_READONLY_AGENTS`.
+- verify-diff.sh writes/clears `.loop-engineer-violation`.
+
 ## 0.2.5
 - SKILL.md: new "Delegation (subagents)" section — default is no subagents; when worth it, executor-side and judge-side rules, never trust agent reports, record pending/returned agents in state/memory so compaction cannot lose them. Rules digest gets a matching line.
 - New `verify-diff.sh` (snapshot / check / clean): deterministic diff vs a snapshot, flags out-of-scope changes and deleted/modified tests. Works in git and non-git dirs. NOT auto-updated and not a hook change — re-run `install.sh` to get it; SKILL.md falls back to `git diff --stat` if it is missing.

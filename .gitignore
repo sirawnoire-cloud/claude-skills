@@ -1,4 +1,7 @@
 .loop-engineer-state.json
 .loop-engineer-memory.md
 .loop-engineer-log.jsonl
+.loop-engineer-agents.jsonl
+.loop-engineer-snapshot.tsv
+.loop-engineer-violation
 .DS_Store

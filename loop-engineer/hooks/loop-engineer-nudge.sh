@@ -25,10 +25,20 @@ if [ -f "$STATE" ]; then
   STAMP="${TMPDIR:-/tmp}/loop-engineer-nudge-$KEY"
   if [ ! -f "$STAMP" ] || [ -z "$(find "$STAMP" -mmin -10 2>/dev/null)" ]; then
     touch "$STAMP" 2>/dev/null || true
+
+# rules-changed detection: loop created under a different skill version than the installed one
+VERMSG=""
+SK="${LOOP_ENGINEER_SKILL_DIR:-$HOME/.claude/skills/loop-engineer}"
+CUR=$(cat "$SK/VERSION" 2>/dev/null | tr -d '[:space:]')
+LOOPV=$(jq -r '.skill_version // empty' "$STATE" 2>/dev/null)
+if [ -n "$CUR" ] && [ -n "$LOOPV" ] && [ "$CUR" != "$LOOPV" ]; then
+  VERMSG="[loop-engineer rules changed] this loop was created under skill v$LOOPV but v$CUR is installed. Re-read $SK/SKILL.md, rewrite the Rules digest block in $CWD/.loop-engineer-memory.md to match the new rules, set skill_version to \"$CUR\" in $CWD/.loop-engineer-state.json, then continue the loop where it was (no restart, keep the iteration count)."
+fi
     IT=$(jq -r '.iteration // "?"' "$STATE" 2>/dev/null)
     PH=$(jq -r '.phase // "?"' "$STATE" 2>/dev/null)
     ST=$(jq -r '.step // ""' "$STATE" 2>/dev/null)
     MSG="[loop-engineer active] iteration $IT, phase $PH${ST:+, step: $ST}. If you do not clearly remember what is already done, read $CWD/.loop-engineer-state.json and $CWD/.loop-engineer-memory.md before acting, and continue the loop instead of starting over."
+    [ -n "$VERMSG" ] && MSG="$MSG $VERMSG"
     OUT="${OUT:+$OUT
 
 }$MSG"

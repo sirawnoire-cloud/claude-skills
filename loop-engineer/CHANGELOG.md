@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.3
+- HOOKS CHANGED — re-run `install.sh`: state file records `skill_version`; SessionStart/prompt hooks compare it with the installed version and, if the skill was updated mid-loop, tell the model to refresh the Rules digest in the memory file and continue (no restart).
+- SKILL.md: documents `skill_version` and the `[loop-engineer rules changed]` handling.
+
 ## 0.2.2
 - HOOKS CHANGED — re-run `install.sh`: updates and loop recoveries now show a one-line user-visible `systemMessage`; each applied update is appended to `~/.claude/skills/loop-engineer/update.log`.
 

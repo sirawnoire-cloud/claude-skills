@@ -26,7 +26,7 @@ semver='^[0-9]+\.[0-9]+\.[0-9]+$'
 REMOTE=$(fetch "$REPO_RAW/VERSION" | tr -d '[:space:]') || exit 0
 printf '%s' "$REMOTE" | grep -Eq "$semver" || exit 0
 
-LOCAL=$(tr -d '[:space:]' < "$SKILL_DIR/VERSION" 2>/dev/null || echo 0.0.0)
+LOCAL=$(cat "$SKILL_DIR/VERSION" 2>/dev/null | tr -d '[:space:]'); [ -n "$LOCAL" ] || LOCAL=0.0.0
 printf '%s' "$LOCAL" | grep -Eq "$semver" || LOCAL=0.0.0
 [ "$REMOTE" = "$LOCAL" ] && exit 0
 # only move forward

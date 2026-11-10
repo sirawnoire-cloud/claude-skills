@@ -70,8 +70,9 @@ Compaction is lossy. After `/compact` (or auto-compact), a long idle, `--resume`
 
 ### `.loop-engineer-state.json` — machine state, small
 
-`{task, criteria, max_iterations, iteration, phase, step, evaluator, baseline, last_feedback, updated_at}`
+`{skill_version, task, criteria, max_iterations, iteration, phase, step, evaluator, baseline, last_feedback, updated_at}`
 
+- `skill_version`: the contents of `~/.claude/skills/loop-engineer/VERSION` when the loop was created (or last re-synced). Hooks compare it with the installed version to detect that the rules changed mid-loop.
 - `phase`: `executor` | `evaluator` | `between` (iteration finished, next not started).
 - `step`: one short line — exactly what you are doing or about to do.
 - `evaluator`: `{mode: rule|judge|mixed, commands: [...], rubric: "<path or null>"}` so a fresh context knows what to run.
@@ -106,6 +107,7 @@ Human-readable, short (aim under ~150 lines — it gets re-injected into context
 
 - **At the start of every iteration**, and **any time the context starts with a compaction summary, or you are unsure what is already done**, read `.loop-engineer-state.json` and `.loop-engineer-memory.md` first (size-check per the guard above). Continue from `phase` / `step` / `Next`. Do not restart, do not re-derive criteria, do not repeat anything listed under `Done` or `Failed attempts`.
 - If a hook injected a block starting with `[loop-engineer recovered]`, treat it as an authoritative resume: the user does **not** need to re-invoke `/loop-engineer`. Say in one line what is continuing (task, iteration, phase), then keep going.
+- If a hook injected `[loop-engineer rules changed]` (the state file's `skill_version` differs from the installed version): re-read `~/.claude/skills/loop-engineer/SKILL.md`, rewrite the `## Rules digest` block in the memory file to match the new rules (keep every other section as is), set `skill_version` in the state file to the installed version, then continue the loop from where it was. Do not restart and do not reset the iteration count.
 - If a hook injected `[loop-engineer updated]`, re-read `~/.claude/skills/loop-engineer/SKILL.md` (the rules changed), apply them to the in-progress loop, and continue.
 
 ### Resume semantics (new session or after compaction)

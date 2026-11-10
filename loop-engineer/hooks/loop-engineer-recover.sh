@@ -24,6 +24,15 @@ STATE="$CWD/.loop-engineer-state.json"
 MEM="$CWD/.loop-engineer-memory.md"
 if [ -f "$STATE" ] && jq -e . "$STATE" >/dev/null 2>&1; then
   S=$(head -c 4000 "$STATE")
+
+# rules-changed detection: loop created under a different skill version than the installed one
+VERMSG=""
+SK="${LOOP_ENGINEER_SKILL_DIR:-$HOME/.claude/skills/loop-engineer}"
+CUR=$(cat "$SK/VERSION" 2>/dev/null | tr -d '[:space:]')
+LOOPV=$(jq -r '.skill_version // empty' "$STATE" 2>/dev/null)
+if [ -n "$CUR" ] && [ -n "$LOOPV" ] && [ "$CUR" != "$LOOPV" ]; then
+  VERMSG="[loop-engineer rules changed] this loop was created under skill v$LOOPV but v$CUR is installed. Re-read $SK/SKILL.md, rewrite the Rules digest block in $CWD/.loop-engineer-memory.md to match the new rules, set skill_version to \"$CUR\" in $CWD/.loop-engineer-state.json, then continue the loop where it was (no restart, keep the iteration count)."
+fi
   M=""
   if [ -f "$MEM" ]; then
     N=$(wc -l < "$MEM" | tr -d ' ')
@@ -39,6 +48,9 @@ $S
 
 --- .loop-engineer-memory.md ---
 ${M:-(missing — rebuild it from the state file and the repo, then continue)}"
+  [ -n "$VERMSG" ] && BLOCK="$BLOCK
+
+$VERMSG"
   OUT="${OUT:+$OUT
 
 }$BLOCK"

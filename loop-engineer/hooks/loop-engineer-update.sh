@@ -18,12 +18,13 @@ command -v shasum >/dev/null 2>&1 || exit 0
 # throttle
 if [ -f "$STAMP" ] && [ -n "$(find "$STAMP" -mmin "-$INTERVAL_MIN" 2>/dev/null)" ]; then exit 0; fi
 
+touch "$STAMP" 2>/dev/null || true   # before fetching: offline/failed checks also wait out the interval
+
 fetch() { curl -fsS --connect-timeout 2 --max-time 5 "$1" 2>/dev/null; }
 semver='^[0-9]+\.[0-9]+\.[0-9]+$'
 
 REMOTE=$(fetch "$REPO_RAW/VERSION" | tr -d '[:space:]') || exit 0
 printf '%s' "$REMOTE" | grep -Eq "$semver" || exit 0
-touch "$STAMP" 2>/dev/null || true
 
 LOCAL=$(tr -d '[:space:]' < "$SKILL_DIR/VERSION" 2>/dev/null || echo 0.0.0)
 printf '%s' "$LOCAL" | grep -Eq "$semver" || LOCAL=0.0.0
@@ -57,5 +58,5 @@ for f in SKILL.md CHANGELOG.md VERSION; do
 done
 
 CHG=$(head -n 15 "$SKILL_DIR/CHANGELOG.md" 2>/dev/null)
-printf '[loop-engineer updated] v%s -> v%s (backup: %s). Changelog:\n%s\nRe-read %s/SKILL.md now (rules changed) and, if a loop-engineer loop is in progress, apply them and continue it. Hook scripts are not auto-updated; re-run install.sh from the repo if the changelog says hooks changed.\n' \
+printf '[loop-engineer updated] v%s -> v%s (backup: %s). Changelog:\n%s\nIf a loop-engineer loop is in progress, re-read %s/SKILL.md now (rules changed), apply them and continue; otherwise do nothing (the new text loads on the next /loop-engineer). Hook scripts are not auto-updated; re-run install.sh from the repo if the changelog says hooks changed.\n' \
   "$LOCAL" "$REMOTE" "$BAK" "$CHG" "$SKILL_DIR"

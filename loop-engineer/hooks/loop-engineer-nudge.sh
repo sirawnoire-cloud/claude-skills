@@ -1,21 +1,31 @@
 #!/usr/bin/env bash
-# loop-engineer UserPromptSubmit hook: cheap reminder while a loop is active.
-# Safety net for idle/compaction cases SessionStart did not cover. Throttled.
+# loop-engineer UserPromptSubmit hook.
+#  1) best-effort self-update check (throttled inside loop-engineer-update.sh, default 6h)
+#  2) if a loop is active, a cheap reminder to re-anchor on the on-disk state (throttled 10 min)
 set -u
 command -v jq >/dev/null 2>&1 || exit 0
 INPUT=$(cat 2>/dev/null || true)
 CWD=$(printf '%s' "$INPUT" | jq -r '.cwd // empty' 2>/dev/null)
 CWD=${CWD:-${CLAUDE_PROJECT_DIR:-$PWD}}
+HERE=$(cd "$(dirname "$0")" && pwd)
+
+OUT=$("$HERE/loop-engineer-update.sh" 2>/dev/null || true)
+
 STATE="$CWD/.loop-engineer-state.json"
-[ -f "$STATE" ] || exit 0
+if [ -f "$STATE" ]; then
+  KEY=$(printf '%s' "$CWD" | shasum | cut -c1-12)
+  STAMP="${TMPDIR:-/tmp}/loop-engineer-nudge-$KEY"
+  if [ ! -f "$STAMP" ] || [ -z "$(find "$STAMP" -mmin -10 2>/dev/null)" ]; then
+    touch "$STAMP" 2>/dev/null || true
+    IT=$(jq -r '.iteration // "?"' "$STATE" 2>/dev/null)
+    PH=$(jq -r '.phase // "?"' "$STATE" 2>/dev/null)
+    ST=$(jq -r '.step // ""' "$STATE" 2>/dev/null)
+    MSG="[loop-engineer active] iteration $IT, phase $PH${ST:+, step: $ST}. If you do not clearly remember what is already done, read $CWD/.loop-engineer-state.json and $CWD/.loop-engineer-memory.md before acting, and continue the loop instead of starting over."
+    OUT="${OUT:+$OUT
 
-KEY=$(printf '%s' "$CWD" | shasum | cut -c1-12)
-STAMP="${TMPDIR:-/tmp}/loop-engineer-nudge-$KEY"
-if [ -f "$STAMP" ] && [ -n "$(find "$STAMP" -mmin -10 2>/dev/null)" ]; then exit 0; fi
-touch "$STAMP" 2>/dev/null || true
+}$MSG"
+  fi
+fi
 
-IT=$(jq -r '.iteration // "?"' "$STATE" 2>/dev/null)
-PH=$(jq -r '.phase // "?"' "$STATE" 2>/dev/null)
-ST=$(jq -r '.step // ""' "$STATE" 2>/dev/null)
-MSG="[loop-engineer active] iteration $IT, phase $PH${ST:+, step: $ST}. If you do not clearly remember what is already done, read $CWD/.loop-engineer-state.json and $CWD/.loop-engineer-memory.md before acting, and continue the loop instead of starting over."
-jq -n --arg c "$MSG" '{hookSpecificOutput:{hookEventName:"UserPromptSubmit",additionalContext:$c}}'
+[ -z "$OUT" ] && exit 0
+jq -n --arg c "$OUT" '{hookSpecificOutput:{hookEventName:"UserPromptSubmit",additionalContext:$c}}'

@@ -24,7 +24,7 @@ jq --arg h "$HK" '
   .hooks //= {}
   | .hooks.SessionStart     = (drop("SessionStart")     + [entry("startup|resume|clear|compact|fork"; "\"\($h)/loop-engineer-recover.sh\""; 20)])
   | .hooks.PreCompact       = (drop("PreCompact")       + [entry(null; "\"\($h)/loop-engineer-precompact.sh\""; 10)])
-  | .hooks.UserPromptSubmit = (drop("UserPromptSubmit") + [entry(null; "\"\($h)/loop-engineer-nudge.sh\""; 10)])
+  | .hooks.UserPromptSubmit = (drop("UserPromptSubmit") + [entry(null; "\"\($h)/loop-engineer-nudge.sh\""; 25)])
 ' "$SET" > "$tmp"
 jq -e . "$tmp" >/dev/null && mv "$tmp" "$SET"
 echo "installed loop-engineer v$(cat "$SK/VERSION") -> $CLAUDE (settings backup: $SET.bak-loop-engineer)"

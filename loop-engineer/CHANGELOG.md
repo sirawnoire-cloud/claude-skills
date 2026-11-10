@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.2.4
+- HOOKS CHANGED — re-run `install.sh`: when the skill was updated or a loop's `skill_version` is stale, hooks inject the full current rules text (SKILL.md minus frontmatter, ~14 KB) with a "replaces any earlier copy" header, instead of only asking the model to re-read the file. SessionStart does it every time it fires; the prompt hook does it once per installed version per project. Only while a loop is in progress (no loop = no extra tokens).
+
 ## 0.2.3
 - HOOKS CHANGED — re-run `install.sh`: state file records `skill_version`; SessionStart/prompt hooks compare it with the installed version and, if the skill was updated mid-loop, tell the model to refresh the Rules digest in the memory file and continue (no restart).
 - SKILL.md: documents `skill_version` and the `[loop-engineer rules changed]` handling.

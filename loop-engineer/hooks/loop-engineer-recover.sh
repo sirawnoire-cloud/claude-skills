@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# loop-engineer SessionStart hook (startup|resume|compact|clear).
-# 1) best-effort self-update  2) if a loop is in progress, re-inject state + memory.
+# loop-engineer SessionStart hook (startup|resume|clear|compact|fork).
+# 1) best-effort self-update  2) if a loop is in progress, re-inject state + memory
+#    (+ the full current rules text when the skill was updated / the loop's skill_version is stale).
 set -u
 command -v jq >/dev/null 2>&1 || exit 0
 INPUT=$(cat 2>/dev/null || true)
@@ -8,6 +9,10 @@ CWD=$(printf '%s' "$INPUT" | jq -r '.cwd // empty' 2>/dev/null)
 CWD=${CWD:-${CLAUDE_PROJECT_DIR:-$PWD}}
 SRC=$(printf '%s' "$INPUT" | jq -r '.source // "unknown"' 2>/dev/null)
 HERE=$(cd "$(dirname "$0")" && pwd)
+SK="${LOOP_ENGINEER_SKILL_DIR:-$HOME/.claude/skills/loop-engineer}"
+
+# current skill text without frontmatter, capped
+rules_body() { awk '/^---$/{c++; next} c>=2' "$SK/SKILL.md" 2>/dev/null | head -c 24000; }
 
 OUT=""
 UPD=$("$HERE/loop-engineer-update.sh" 2>/dev/null || true)
@@ -25,14 +30,14 @@ MEM="$CWD/.loop-engineer-memory.md"
 if [ -f "$STATE" ] && jq -e . "$STATE" >/dev/null 2>&1; then
   S=$(head -c 4000 "$STATE")
 
-# rules-changed detection: loop created under a different skill version than the installed one
-VERMSG=""
-SK="${LOOP_ENGINEER_SKILL_DIR:-$HOME/.claude/skills/loop-engineer}"
-CUR=$(cat "$SK/VERSION" 2>/dev/null | tr -d '[:space:]')
-LOOPV=$(jq -r '.skill_version // empty' "$STATE" 2>/dev/null)
-if [ -n "$CUR" ] && [ -n "$LOOPV" ] && [ "$CUR" != "$LOOPV" ]; then
-  VERMSG="[loop-engineer rules changed] this loop was created under skill v$LOOPV but v$CUR is installed. Re-read $SK/SKILL.md, rewrite the Rules digest block in $CWD/.loop-engineer-memory.md to match the new rules, set skill_version to \"$CUR\" in $CWD/.loop-engineer-state.json, then continue the loop where it was (no restart, keep the iteration count)."
-fi
+  # rules-changed detection: loop created under a different skill version than the installed one
+  VERMSG=""
+  CUR=$(cat "$SK/VERSION" 2>/dev/null | tr -d '[:space:]')
+  LOOPV=$(jq -r '.skill_version // empty' "$STATE" 2>/dev/null)
+  if [ -n "$CUR" ] && [ -n "$LOOPV" ] && [ "$CUR" != "$LOOPV" ]; then
+    VERMSG="[loop-engineer rules changed] this loop was created under skill v$LOOPV but v$CUR is installed. The full current rules are below and REPLACE any earlier copy of the loop-engineer rules in this conversation. Rewrite the Rules digest block in $CWD/.loop-engineer-memory.md to match them, set skill_version to \"$CUR\" in $CWD/.loop-engineer-state.json, then continue the loop where it was (no restart, keep the iteration count)."
+  fi
+
   M=""
   if [ -f "$MEM" ]; then
     N=$(wc -l < "$MEM" | tr -d ' ')
@@ -51,6 +56,14 @@ ${M:-(missing — rebuild it from the state file and the repo, then continue)}"
   [ -n "$VERMSG" ] && BLOCK="$BLOCK
 
 $VERMSG"
+  # ship the full current rules when they changed (stale loop) or were just updated
+  if [ -n "$VERMSG" ] || [ -n "$UPD" ]; then
+    RB=$(rules_body)
+    [ -n "$RB" ] && BLOCK="$BLOCK
+
+--- loop-engineer rules, CURRENT (v${CUR:-?}); supersede any earlier copy in this conversation ---
+$RB"
+  fi
   OUT="${OUT:+$OUT
 
 }$BLOCK"

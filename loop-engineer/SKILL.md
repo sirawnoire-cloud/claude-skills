@@ -64,50 +64,93 @@ Past that threshold, reach for whatever narrow tool actually answers the questio
 
 This applies to both the executor (doing the task) and the evaluator (checking the result) — a check that reads a huge reference/expected-output file in full falls into the same trap.
 
-## Surviving a hard cutoff (usage limit)
+## Surviving compaction, idle, and hard cutoffs (memory on disk)
 
-A long conversation needs nothing extra — the harness auto-compresses context and the loop just continues. This section is only for a *hard* cutoff: the session dies mid-loop and a brand-new session (no memory of this chat) has to pick up later. That new session can't read the old chat, so the source of truth has to live outside it, on disk.
+Compaction is lossy. After `/compact` (or auto-compact), a long idle, `--resume`, or a hard cutoff (usage limit), the conversation summary may drop the criteria, the plan, what is already done, which attempts failed, and even these rules. **The source of truth lives on disk, not in the chat.** Two files at the project root (the directory the task is in — never a global path; both are task-specific and disposable):
 
-State file: `.loop-engineer-state.json` at the project root (the same repo/directory the task is in — never a global path, this is task-specific and disposable).
+### `.loop-engineer-state.json` — machine state, small
 
-- **Write it after every iteration**, pass or fail: `{task, criteria, max_iterations, iteration, baseline, last_feedback}`. Keep every field a short, human-readable gist, never a raw dump — `last_feedback` is a sentence or two on what was tried and why it fell short, not pasted output/logs/data. The file only works as a resume point if loading it back is cheap; if writing it ever tempts you to paste something large, summarize instead.
-- **On invoke, before doing anything else**, check for this file:
-  - The conversation already has a clear current task and this file's `task` doesn't match it → ignore/overwrite, start fresh at iteration 1.
-  - The conversation has no task yet (a bare invoke in a fresh session) and this file exists → there's nothing to match against, so treat the file's own `task` as the one to resume; state it back to the user in one line so they know what's continuing.
-  - Either way it's a match → this is a resume, not a fresh start. Don't reset to iteration 1 and don't revert to `baseline` — the code as it currently sits (already partly fixed) is the new starting point. Re-run the evaluator immediately before doing anything else, since the cutoff may have hit right after a fix that was never actually checked. Continue the loop from the recorded iteration count, not from 1.
-- **Delete the file** the instant the loop ends — pass, or the final report at max_iterations. A leftover file must never leak into a later, unrelated task.
+`{task, criteria, max_iterations, iteration, phase, step, evaluator, baseline, last_feedback, updated_at}`
+
+- `phase`: `executor` | `evaluator` | `between` (iteration finished, next not started).
+- `step`: one short line — exactly what you are doing or about to do.
+- `evaluator`: `{mode: rule|judge|mixed, commands: [...], rubric: "<path or null>"}` so a fresh context knows what to run.
+- `baseline`: git repos → "git diff clean" or the commit hash; non-git dirs → list of files about to be touched with their sha256/mtime. A short gist, never a raw dump.
+- `last_feedback`: a sentence or two. Full history goes in the memory file.
+
+### `.loop-engineer-memory.md` — progress memory (like a MEMORY.md)
+
+Human-readable, short (aim under ~150 lines — it gets re-injected into context, so keep it cheap). Edit in place; don't just append forever. Sections:
+
+```
+## Rules digest        (copy this block verbatim — it survives even if the skill text is lost)
+- max 3 iterations; stop+ask if 2 consecutive fails have the same reason
+- evaluator: rule-based = actually run the command; LLM-judge = judge against criteria (web UI: ui-craft rubric); both = rule first
+- code: check edge cases + run the FULL test suite
+- never: delete/weaken tests, hardcode outputs, mock the thing under test, narrow the criteria
+- never load huge files whole (check wc -l / ls -la first; grep/head/awk instead)
+- on finish (pass or max_iterations): delete state + memory files, append one line to .loop-engineer-log.jsonl
+## Goal & criteria
+## Done               (checklist: finished steps, files touched)
+## Decisions          (choice + why)
+## Failed attempts    (per iteration: what was tried, why it fell short — so it is never repeated)
+## Next               (the single next action)
+```
+
+### When to write
+
+- **At every checkpoint**, not only at the end of an iteration: after finishing each meaningful step, before any long or risky operation (big refactor, long-running job, anything that might hit a limit), and right after each evaluator result. If context were wiped this second, the files must be enough to continue.
+- Write order: update memory (`Done`/`Failed attempts`/`Next`) first, then state (`phase`/`step`/`iteration`).
+
+### Re-anchor rule (this is what survives compaction)
+
+- **At the start of every iteration**, and **any time the context starts with a compaction summary, or you are unsure what is already done**, read `.loop-engineer-state.json` and `.loop-engineer-memory.md` first (size-check per the guard above). Continue from `phase` / `step` / `Next`. Do not restart, do not re-derive criteria, do not repeat anything listed under `Done` or `Failed attempts`.
+- If a hook injected a block starting with `[loop-engineer recovered]`, treat it as an authoritative resume: the user does **not** need to re-invoke `/loop-engineer`. Say in one line what is continuing (task, iteration, phase), then keep going.
+- If a hook injected `[loop-engineer updated]`, re-read `~/.claude/skills/loop-engineer/SKILL.md` (the rules changed), apply them to the in-progress loop, and continue.
+
+### Resume semantics (new session or after compaction)
+
+- Bare invoke in a fresh session with no task and a state file present → resume the file's `task`; state it back in one line.
+- The conversation has a clear task that doesn't match the state file's `task` → ignore the old files, overwrite, start fresh at iteration 1.
+- A match → resume, not a fresh start. Don't reset to iteration 1 and don't revert to `baseline` — the code as it currently sits is the new starting point. If `phase` is `executor` or `between`, or unsure, re-run the evaluator before doing anything else (the cutoff may have hit right after a fix that was never checked). Continue from the recorded iteration count.
+- For a cutoff where the work itself should move to a brand-new session, the `handoff` skill can package the rest; the two files above are what it should point at.
+
+### Finish
+
+Delete both files the instant the loop ends — pass, or the final report at max_iterations. A leftover file must never leak into a later, unrelated task.
 
 ## Remembering past runs (across sessions, not just mid-loop)
 
-The state file above only exists while a loop is *in progress* — it's deleted the moment one finishes, so it can't answer "did I already loop-engineer this?" days or sessions later. That's a different question from resuming a cutoff, and it's the more common one in practice: the human simply forgets whether they already ran this.
+The state/memory files only exist while a loop is *in progress* — they're deleted the moment one finishes, so they can't answer "did I already loop-engineer this?" days or sessions later. That's a different question from resuming, and it's the more common one in practice: the human simply forgets whether they already ran this.
 
 Log file: `.loop-engineer-log.jsonl` at the project root — append-only, never deleted by this skill.
 
-- **On invoke, before doing anything else** (even before touching the state file above), grep this log for a task that matches or closely overlaps the current one.
+- **On a fresh invoke, before doing anything else**, grep this log for a task that matches or closely overlaps the current one. **Skip this check when a state file for the same task already exists** — that is a continuation, not a repeat, and must not be blocked.
   - No match → proceed normally.
   - Match found → stop and tell the user: when it ran, what the result was (pass/fail), and ask whether to run it again anyway. Don't silently re-run — that's exactly the wasted/confusing repeat this check exists to prevent.
-- **Append one line the instant the loop ends** (pass, or the final report at max_iterations): `{task, criteria, result, iterations_used, timestamp}`. Append, never overwrite — this is a history, not a state snapshot.
+- **Append one line the instant the loop ends** (pass, or the final report at max_iterations): `{task, criteria, result, iterations_used, timestamp, memory_summary}` — `memory_summary` is one or two sentences distilled from the memory file (what was done, what was left). Append, never overwrite — this is a history, not a state snapshot.
 
 ## Loop
 
 ```
-before iteration 1: check the run log for a prior match (see above); if none, check
-                     for a resume state file; if neither, record a baseline (git diff /
-                     files about to be touched) so a regressed end-state can be
-                     identified and reverted if the run finishes worse than it started
+before iteration 1: if a state file exists for this task → resume (see above), skip the log check;
+                     else check the run log for a prior match; if none, record a baseline (see
+                     `baseline`) and create the state + memory files (criteria, rules digest, Next)
 
 iteration = 1 (or the resumed count, from the state file)
 loop:
-  run executor (on iteration > 1, feed it the prior evaluator feedback)
-  run evaluator → pass/fail + reason
-  write/overwrite the state file with this iteration's result
+  re-anchor: read state + memory if this is not the very first iteration or context looks compacted
+  run executor (on iteration > 1, feed it the prior evaluator feedback + Failed attempts);
+      checkpoint memory + state after each meaningful step (phase=executor)
+  run evaluator → pass/fail + reason (phase=evaluator)
+  write memory (Done / Failed attempts / Next) then state (phase=between, iteration, last_feedback)
   report the iteration result to the user in one line: "iter N: pass/fail — reason"
-  if pass: delete state file, append run log, stop, report done
-  if iteration == max_iterations: delete state file, append run log, stop, see "Final report" below
+  if pass: delete state + memory, append run log, stop, report done
+  if iteration == max_iterations: delete state + memory, append run log, stop, see "Final report" below
   iteration += 1
 ```
 
-Stop immediately and ask the user if two consecutive iterations fail for the *same* reason — that signals the criteria or approach needs a human call, not another retry.
+Stop immediately and ask the user if two consecutive iterations fail for the *same* reason — that signals the criteria or approach needs a human call, not another retry. (Keep the state + memory files in this case — the user may tell you to continue.)
 
 ### Final report (max_iterations reached without pass)
 

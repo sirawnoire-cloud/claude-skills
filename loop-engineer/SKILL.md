@@ -16,6 +16,35 @@ Don't ask the user to spell out `criteria` or `max_iterations` — derive both y
 - **Criteria**: infer from the task's own nature before the first attempt — a code task implies tests/build/type-check must pass and existing behavior mustn't break; a writing task implies matching the tone/spec/requirements stated or implied earlier in the conversation; a data/config task implies the output validates against its schema or the stated constraint. State the criteria you inferred in one line before iterating, so the run is auditable — but don't stop to ask the user to confirm it.
 - **max_iterations**: always 3. Fixed, no confirmation needed.
 
+## When the task itself is ambiguous
+
+Deriving criteria is not the same as guessing what the user *wants*. A loop that passes against a wrong
+reading wastes up to three iterations and hands back a confident, useless result. So before the first
+attempt, after you've inferred criteria, ask yourself whether the task supports **more than one reading**.
+First try to settle it yourself from the conversation, the repo and files, `CLAUDE.md`, and the run log —
+most apparent ambiguity dissolves there.
+
+**Ask — one question, then wait — only when all three hold:**
+1. Two or more readings remain that lead to *materially different* deliverables or different pass/fail
+   outcomes (not naming, formatting, or other details you can reasonably choose);
+2. nothing you can read resolves it; and
+3. a wrong guess would cost more than the question — non-trivial work, or something hard to reverse
+   (deleting or overwriting data, changing a public interface, a migration).
+
+How to ask: one question, plain language, at most three options, with your recommended answer marked, e.g.
+"'Make the report better' could mean tighter wording or a restructure — I'd do the restructure
+(recommended). OK?" Never several questions at once, never a questionnaire.
+
+**Otherwise decide and go** — that is the default. Put the assumption into the one-line criteria statement
+("assumed: X"), write it under `Decisions` in the memory file, and carry on. Wrongly asking is a failure
+too: the user hired a loop so they would not have to supervise it.
+
+- **Cannot ask** (headless / non-interactive run): take the most conservative reading — the one that
+  changes the least and is easiest to undo — record it as an assumption, and say so in the final report.
+- **A fork appears mid-loop**: decide and record it. Only stop to ask if it is irreversible or destructive;
+  the "same failure twice" rule below is the backstop for everything else.
+- **After the answer**: rewrite the criteria line, log the answer in `Decisions`, and start iteration 1.
+
 ## Repeat invoke, same session
 
 If `/loop-engineer` already ran earlier in this same conversation and this invoke names no new task (just bare `/loop-engineer` again), don't re-explain the whole framework or re-derive anything — the chat history already shows it's active here. Reply short: something like "loop-engineer here — give a task" and stop. Only run the full flow below when there's an actual task to act on, whether that's this invoke or the next message.
@@ -86,6 +115,7 @@ Human-readable, short (aim under ~150 lines — it gets re-injected into context
 ```
 ## Rules digest        (copy this block verbatim — it survives even if the skill text is lost)
 - max 3 iterations; stop+ask if 2 consecutive fails have the same reason
+- ambiguity: ask ONE question (with a recommended answer) only if readings differ materially, nothing readable settles it, and a wrong guess is costly/irreversible; otherwise infer, record "assumed: X" in Decisions, and go; if unable to ask, take the most conservative reading
 - evaluator: rule-based = actually run the command; LLM-judge = judge against criteria (web UI: ui-craft rubric); both = rule first
 - code: check edge cases + run the FULL test suite
 - never: delete/weaken tests, hardcode outputs, mock the thing under test, narrow the criteria

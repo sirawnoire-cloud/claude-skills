@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.4.1
+- SKILL.md only (auto-updates; no hook change): new "When the task itself is ambiguous" rule. Before iteration 1, if the task supports materially different readings that nothing in the conversation/repo/run log settles and a wrong guess is costly, ask ONE question with a recommended answer; otherwise infer, record "assumed: X", and go. Headless runs take the most conservative reading; mid-loop forks are decided and recorded unless irreversible. Rules digest gets a matching line.
+
 ## 0.4.0
 - HOOKS CHANGED — re-run the repo's `install.sh`: skill self-update moved out of the loop-engineer hooks into a generic, separate `claude-skills-sync` hook (updates every skill installed from this repo, not just loop-engineer). `loop-engineer-update.sh` is removed; the recover/nudge hooks now only handle loop recovery and stale-rules detection (via `skill_version`).
 

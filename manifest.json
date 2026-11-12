@@ -66,23 +66,23 @@
       ]
     },
     "loop-engineer": {
-      "version": "0.4.0",
+      "version": "0.4.1",
       "files": [
         {
           "path": "CHANGELOG.md",
-          "sha256": "82c1ccf646c299137d465730582fba1f4370e5caa15cca85ed7b0cc5a6d5f860",
+          "sha256": "51a74efc7e950f3060b4a014e50f94247425fbc50147a24f8e118f530fe4c9ae",
           "auto": true,
-          "size": 4426
+          "size": 4920
         },
         {
           "path": "SKILL.md",
-          "sha256": "50621c426b7bc19d321e8927bd79c3dee13c8c3b3041a1881398ca7810e8de47",
+          "sha256": "a274da9737e64f8b695ee48f9f6065232e97f3e875007938b6e01ad735982d3e",
           "auto": true,
-          "size": 19172
+          "size": 21484
         },
         {
           "path": "VERSION",
-          "sha256": "40b8eb4000a913a7791090535f291d3d369874162a89ef3c9e3d4e887a1b9e79",
+          "sha256": "f62184cee8787f2f6941c82041a5725d4edc9aa293ebe5dbf664406e82ec1fe1",
           "auto": true,
           "size": 6
         },
